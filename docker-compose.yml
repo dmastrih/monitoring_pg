@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.46.0
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      # - prometheus-data:/prometheus
+    # networks:
+    #   - monitoring
+
+  grafana:
+    image: grafana/grafana:9.3.6
+    container_name: grafana
+    ports:
+      - 3000:3000
+    # networks:
+    #   - monitoring
+
+  postgres:
+    image: postgres:12
+    container_name: postgres
+    ports:
+      - 5431:5431
+    volumes:
+      - ./backup:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: test_db
+  
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: postgres-exporter
+    ports:
+      - 9187:9187
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:postgrespassword@postgres:5432/shop?sslmode=disable"
+    links:
+      - postgres
+      - prometheus
